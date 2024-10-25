@@ -15,7 +15,7 @@ class HomePage extends StatelessWidget {
   void showEditDialog(BuildContext context, Item item) {
     nameController.text = item.name;
     categoryController.text = item.category;
-    priceController.text = item.price.toString();
+    priceController.text = item.price;
 
     showDialog(
       context: context,
@@ -47,16 +47,14 @@ class HomePage extends StatelessWidget {
                 String category = categoryController.text;
                 String price = priceController.text;
 
-                if (name.isNotEmpty &&
-                    category.isNotEmpty &&
-                    price.isNotEmpty) {
+                if (name.isNotEmpty && category.isNotEmpty && price.isNotEmpty) {
                   itemController.updateItem(item.id, name, category, price);
                   nameController.clear();
                   categoryController.clear();
                   priceController.clear();
                   Navigator.of(context).pop();
                 } else {
-                  Get.snackbar('Error', 'Please fill all fields correctly.');
+                  Get.snackbar('Error', 'Please fill all fields correctly.'); // Error if fields are empty
                 }
               },
               child: const Text('Update'),
@@ -73,7 +71,7 @@ class HomePage extends StatelessWidget {
       middleText: 'Are you sure you want to delete this item?',
       confirm: TextButton(
         onPressed: () {
-          itemController.deleteItem(id as int);
+          itemController.deleteItem(id);
           Navigator.of(context).pop();
         },
         child: const Text('Delete'),
@@ -93,7 +91,8 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shopping App'),
+        backgroundColor: Colors.black,
+        title: const Text('Shopping App', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
@@ -104,7 +103,7 @@ class HomePage extends StatelessWidget {
                 Get.offAndToNamed('/signIn');
               }
             },
-            icon: const Icon(Icons.logout_outlined),
+            icon: const Icon(Icons.logout_outlined, color: Colors.white),
           ),
         ],
       ),
@@ -114,16 +113,13 @@ class HomePage extends StatelessWidget {
           itemBuilder: (context, index) {
             final item = itemController.items[index];
             return ListTile(
-              leading:
-                  Text('${item.id}.', style: const TextStyle(fontSize: 20)),
+              leading: Text('${item.id}.', style: const TextStyle(fontSize: 20)),
               title: Text(item.name),
               subtitle: Text(item.category),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('₹ ${item.price}',
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.w400)),
+                  Text('₹ ${item.price}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400)),
                   const SizedBox(width: 15),
                   IconButton(
                     onPressed: () {
@@ -144,6 +140,7 @@ class HomePage extends StatelessWidget {
         );
       }),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.black,
         onPressed: () async {
           await showDialog(
             context: context,
@@ -164,8 +161,7 @@ class HomePage extends StatelessWidget {
                     TextField(
                       controller: priceController,
                       decoration: const InputDecoration(labelText: 'Price'),
-                      keyboardType:
-                          TextInputType.number,
+                      keyboardType: TextInputType.number,
                     ),
                   ],
                 ),
@@ -176,17 +172,14 @@ class HomePage extends StatelessWidget {
                       String category = categoryController.text;
                       String price = priceController.text;
 
-                      if (name.isNotEmpty &&
-                          category.isNotEmpty &&
-                          price.isNotEmpty) {
+                      if (name.isNotEmpty && category.isNotEmpty && price.isNotEmpty) {
                         itemController.addItem(name, category, price);
                         nameController.clear();
                         categoryController.clear();
                         priceController.clear();
                         Navigator.of(context).pop();
                       } else {
-                        Get.snackbar(
-                            'Error', 'Please fill all fields correctly.');
+                        Get.snackbar('Error', 'Please fill all fields correctly.');
                       }
                     },
                     child: const Text('Add'),
@@ -196,7 +189,7 @@ class HomePage extends StatelessWidget {
             },
           );
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white, size: 35),
       ),
     );
   }

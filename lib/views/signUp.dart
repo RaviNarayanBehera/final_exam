@@ -13,10 +13,12 @@ class SignUpPage extends StatelessWidget {
     var controller = Get.put(AuthController());
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.black,
+          centerTitle: true,
           title: const Text(
             'Sign Up',
             style: TextStyle(
-              color: Colors.black,
+              color: Colors.white,
               fontSize: 23,
               fontWeight: FontWeight.w500,
               letterSpacing: 1.5,
@@ -24,16 +26,16 @@ class SignUpPage extends StatelessWidget {
           ),
           leading: IconButton(
               onPressed: () {
-                Get.back(result: '/signIn');
+                Get.back(result: '/signIn',);
               },
               icon: const Icon(
                 Icons.arrow_back,
-                color: Colors.black,
+                color: Colors.white,
               )),
         ),
         body: Container(
-          decoration: BoxDecoration(
-            color: Colors.blue.shade100,
+          decoration: const BoxDecoration(
+            color: Colors.black,
           ),
           child: AlertDialog(
             shadowColor: Colors.black,

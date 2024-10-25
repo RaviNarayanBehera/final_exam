@@ -13,10 +13,12 @@ class SignInPage extends StatelessWidget {
     var controller = Get.put(AuthController());
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SingIn Page'),
+        backgroundColor: Colors.black,
+        centerTitle: true,
+        title: const Text('Sing In',style: TextStyle(color: Colors.white),),
       ),
       body: Container(
-        decoration: BoxDecoration(color: Colors.blue.shade100),
+        decoration: BoxDecoration(color: Colors.black),
         child: AlertDialog(
           shadowColor: Colors.black,
           backgroundColor: Colors.white,

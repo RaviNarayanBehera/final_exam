@@ -44,24 +44,30 @@ class ItemController extends GetxController {
       await _firestore.collection('items').doc(id as String?).update({
         'name': name,
         'category': category,
-        'price': price,
+        'price': price, // Store as string
       });
 
       // Update the local item list
       final index = items.indexWhere((item) => item.id == id);
       if (index != -1) {
         items[index] = Item(id: id, name: name, category: category, price: price);
+        update(); // Notify the UI to refresh
       }
-      update(); // Notify the UI to refresh
     } catch (e) {
       print('Error updating item: $e');
       Get.snackbar('Error', 'Failed to update item.');
     }
   }
 
-  Future<void> deleteItem(int id) async {
-    final doc = items.firstWhere((item) => item.id == id);
-    await _firestore.collection('items').doc(doc.id as String?).delete();
-    items.removeWhere((item) => item.id == id);
+  Future<void> deleteItem(String id) async {
+    try {
+      await _firestore.collection('items').doc(id).delete();
+      items.removeWhere((item) => item.id == id);
+      update(); // Notify the UI to refresh
+    } catch (e) {
+      print('Error deleting item: $e');
+      Get.snackbar('Error', 'Failed to delete item.');
+    }
   }
+
 }
