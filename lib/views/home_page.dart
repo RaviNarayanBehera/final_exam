@@ -47,7 +47,7 @@ class HomePage extends StatelessWidget {
                 String category = categoryController.text;
                 String price = priceController.text;
 
-                if (name.isNotEmpty && category.isNotEmpty && price.isNotEmpty) {
+                if (name.isNotEmpty && category.isNotEmpty) {
                   itemController.updateItem(item.id, name, category, price);
                   nameController.clear();
                   categoryController.clear();

@@ -44,14 +44,13 @@ class ItemController extends GetxController {
       await _firestore.collection('items').doc(id as String?).update({
         'name': name,
         'category': category,
-        'price': price, // Store as string
+        'price': price,
       });
 
-      // Update the local item list
       final index = items.indexWhere((item) => item.id == id);
       if (index != -1) {
         items[index] = Item(id: id, name: name, category: category, price: price);
-        update(); // Notify the UI to refresh
+        update();
       }
     } catch (e) {
       print('Error updating item: $e');
