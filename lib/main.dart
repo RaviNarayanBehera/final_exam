@@ -8,13 +8,11 @@ import 'package:get/get.dart';
 import 'auth_manager.dart';
 import 'firebase_options.dart';
 
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -22,29 +20,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-          debugShowCheckedModeBanner: false,
-          getPages: [
-            // GetPage(
-            //   name: '/',
-            //   page: () => const SplashScreen(),
-            // ),
-            // GetPage(
-            //   name: '/',
-            //   page: () =>  const AuthManager(),
-            // ),
-            GetPage(
-              name: '/',
-              page: () => const SignInPage(),
-            ),
-            GetPage(
-              name: '/signUp',
-              page: () => const SignUpPage(),
-            ),
-            GetPage(
-              name: '/home',
-              page: () =>  HomePage(),
-            ),
-          ],
+      debugShowCheckedModeBanner: false,
+      getPages: [
+        // GetPage(
+        //   name: '/',
+        //   page: () => const SplashScreen(),
+        // ),
+        // GetPage(
+        //   name: '/',
+        //   page: () =>  const AuthManager(),
+        // ),
+        GetPage(
+          name: '/',
+          page: () => SignIn(),
+        ),
+        GetPage(
+          name: '/signUp',
+          page: () => const SignUp(),
+        ),
+        GetPage(
+          name: '/home',
+          page: () => HomePage(),
+        ),
+      ],
     );
   }
 }

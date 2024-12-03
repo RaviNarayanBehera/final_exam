@@ -1,195 +1,287 @@
-import 'package:final_exam/service/auth_services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:final_exam/views/signUp.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
-import '../global/shop_item_controller.dart';
-import '../modal/shop_modal.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+
+import '../controller/auth_controller.dart';
+import '../controller/db_controller.dart';
+import '../service/attendence_service.dart';
+import '../service/auth_services.dart';
 
 class HomePage extends StatelessWidget {
-  final ItemController itemController = Get.put(ItemController());
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController categoryController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
-
-  void showEditDialog(BuildContext context, Item item) {
-    nameController.text = item.name;
-    categoryController.text = item.category;
-    priceController.text = item.price;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Item'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
-              ),
-              TextField(
-                controller: priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                String name = nameController.text;
-                String category = categoryController.text;
-                String price = priceController.text;
-
-                if (name.isNotEmpty && category.isNotEmpty) {
-                  itemController.updateItem(item.id, name, category, price);
-                  nameController.clear();
-                  categoryController.clear();
-                  priceController.clear();
-                  Navigator.of(context).pop();
-                } else {
-                  Get.snackbar('Error', 'Please fill all fields correctly.'); // Error if fields are empty
-                }
-              },
-              child: const Text('Update'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void confirmDelete(BuildContext context, String id) {
-    Get.defaultDialog(
-      title: 'Confirm Delete',
-      middleText: 'Are you sure you want to delete this item?',
-      confirm: TextButton(
-        onPressed: () {
-          itemController.deleteItem(id);
-          Navigator.of(context).pop();
-        },
-        child: const Text('Delete'),
-      ),
-      cancel: TextButton(
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
-        child: const Text('Cancel'),
-      ),
-    );
-  }
-
-  HomePage({super.key});
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    var controller = Get.put(AttendanceController());
+    var dataController = Get.put(DatabaseController());
+    String? date;
+    String? selectDate;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Shopping App', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
+        title: Text('HomePage'),
         actions: [
           IconButton(
-            onPressed: () {
-              AuthService.authService.signOutUser();
-              User? user = AuthService.authService.getCurrentUser();
-              if (user == null) {
-                Get.offAndToNamed('/signIn');
-              }
-            },
-            icon: const Icon(Icons.logout_outlined, color: Colors.white),
-          ),
+              onPressed: () async {
+                await AuthService.authService.signOutUser();
+                Get.to(SignUp());
+              },
+              icon: Icon(Icons.logout)),
+          IconButton(
+              onPressed: () async {
+                await FireStoreServices.firebaseStoreServices
+                    .deleteDataFromFireStore();
+                for (int i = 0; i < dataController.dataList.length; i++) {
+                  String name = dataController.dataList[i]['name'];
+                  String date = dataController.dataList[i]['date'];
+                  String present = dataController.dataList[i]['present'];
+                  int id = dataController.dataList[i]['id'];
+                  await FireStoreServices.firebaseStoreServices
+                      .addDataInFireStore(name, date, present, id);
+                }
+              },
+              icon: Icon(Icons.sync)),
+          IconButton(
+              onPressed: () async {
+                for (int i = 0; i < dataController.dataList.length; i++) {
+                  int id = dataController.dataList[i]['id'];
+                  dataController.deleteData(id);
+                }
+                dataController.getData();
+                await FireStoreServices.firebaseStoreServices
+                    .readDataFromFireStore();
+              },
+              icon: Icon(Icons.backup)),
         ],
       ),
-      body: Obx(() {
-        return ListView.builder(
-          itemCount: itemController.items.length,
-          itemBuilder: (context, index) {
-            final item = itemController.items[index];
-            return ListTile(
-              leading: Text('${item.id}.', style: const TextStyle(fontSize: 20)),
-              title: Text(item.name),
-              subtitle: Text(item.category),
-              trailing: Row(
+      body: Obx(
+        () => Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: dataController.dataList.length,
+                itemBuilder: (context, index) => Card(
+                  child: ListTile(
+                    title: Text(dataController.dataList[index]['name']),
+                    subtitle: Text(dataController.dataList[index]['date']),
+                    leading: Text(
+                      dataController.dataList[index]['id'].toString() + ".",
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Present : ' +
+                            dataController.dataList[index]['present']),
+                        IconButton(
+                            onPressed: () {
+                              controller.txtName.text =
+                                  dataController.dataList[index]['name'];
+                              controller.txtDate.text =
+                                  dataController.dataList[index]['date'];
+                              selectDate =
+                                  dataController.dataList[index]['date'];
+                              controller.type.value =
+                                  dataController.dataList[index]['present'] ==
+                                          'Yes'
+                                      ? true
+                                      : false;
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Update Data'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      TextField(
+                                        controller: controller.txtName,
+                                        decoration: InputDecoration(
+                                            enabledBorder: OutlineInputBorder(),
+                                            focusedBorder: OutlineInputBorder(),
+                                            labelText: 'Enter Name'),
+                                      ).marginSymmetric(
+                                          horizontal: 15, vertical: 10),
+                                      TextField(
+                                        controller: controller.txtDate,
+                                        decoration: InputDecoration(
+                                          enabledBorder: OutlineInputBorder(),
+                                          focusedBorder: OutlineInputBorder(),
+                                          labelText: 'Enter Date',
+                                          suffixIcon: IconButton(
+                                              onPressed: () async {
+                                                DateTime? pickDate =
+                                                    await showDatePicker(
+                                                        context: context,
+                                                        firstDate:
+                                                            DateTime(2000),
+                                                        lastDate:
+                                                            DateTime.now());
+                                                selectDate = pickDate!.day
+                                                        .toString() +
+                                                    "-" +
+                                                    pickDate.month.toString() +
+                                                    "-" +
+                                                    pickDate.year.toString();
+                                                controller.txtDate.text =
+                                                    selectDate!;
+                                              },
+                                              icon: Icon(Icons.calendar_month)),
+                                        ),
+                                      ).marginSymmetric(
+                                          horizontal: 15, vertical: 10),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Text('    Select Date:'),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text('Present(Yes/No):'),
+                                          Obx(
+                                            () => Switch(
+                                              value: controller.type.value,
+                                              onChanged: (value) {
+                                                controller.type.value = value;
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () {
+                                          String name = controller.txtName.text;
+                                          String present =
+                                              controller.type.value == true
+                                                  ? "Yes"
+                                                  : "No";
+                                          int id = dataController
+                                              .dataList[index]['id'];
+                                          dataController.updateData(
+                                              name, selectDate!, present, id);
+
+                                          controller.txtName.clear();
+                                          controller.txtDate.clear();
+                                          controller.type.value = true;
+                                          Get.back();
+                                        },
+                                        child: Text('Update')),
+                                    TextButton(
+                                        onPressed: () {
+                                          controller.txtName.clear();
+                                          controller.txtDate.clear();
+                                          controller.type.value = true;
+                                          Get.back();
+                                        },
+                                        child: Text('Cancle')),
+                                  ],
+                                ),
+                              );
+                            },
+                            icon: Icon(Icons.edit)),
+                        IconButton(
+                            onPressed: () {
+                              int id = dataController.dataList[index]['id'];
+                              dataController.deleteData(id);
+                              dataController.getData();
+                            },
+                            icon: Icon(Icons.delete)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Add Data'),
+              content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('₹ ${item.price}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400)),
-                  const SizedBox(width: 15),
-                  IconButton(
-                    onPressed: () {
-                      showEditDialog(context, item);
-                    },
-                    icon: const Icon(Icons.edit_outlined),
+                  TextField(
+                    controller: controller.txtName,
+                    decoration: InputDecoration(
+                        enabledBorder: OutlineInputBorder(),
+                        focusedBorder: OutlineInputBorder(),
+                        labelText: 'Enter Name'),
+                  ).marginSymmetric(horizontal: 15, vertical: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text('    Select Date:'),
+                      IconButton(
+                          onPressed: () async {
+                            DateTime? pickDate = await showDatePicker(
+                                context: context,
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime.now());
+                            selectDate = pickDate!.day.toString() +
+                                "-" +
+                                pickDate.month.toString() +
+                                "-" +
+                                pickDate.year.toString();
+                          },
+                          icon: Icon(Icons.calendar_month)),
+                    ],
                   ),
-                  IconButton(
-                    onPressed: () {
-                      confirmDelete(context, item.id as String);
-                    },
-                    icon: const Icon(Icons.delete),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text('Present(Yes/No):'),
+                      Obx(
+                        () => Switch(
+                          value: controller.type.value,
+                          onChanged: (value) {
+                            controller.type.value = value;
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            );
-          },
-        );
-      }),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.black,
-        onPressed: () async {
-          await showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Add Item'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Name'),
-                    ),
-                    TextField(
-                      controller: categoryController,
-                      decoration: const InputDecoration(labelText: 'Category'),
-                    ),
-                    TextField(
-                      controller: priceController,
-                      decoration: const InputDecoration(labelText: 'Price'),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
+              actions: [
+                TextButton(
                     onPressed: () {
-                      String name = nameController.text;
-                      String category = categoryController.text;
-                      String price = priceController.text;
+                      String name = controller.txtName.text;
+                      String present =
+                          controller.type.value == true ? "Yes" : "No";
 
-                      if (name.isNotEmpty && category.isNotEmpty && price.isNotEmpty) {
-                        itemController.addItem(name, category, price);
-                        nameController.clear();
-                        categoryController.clear();
-                        priceController.clear();
-                        Navigator.of(context).pop();
-                      } else {
-                        Get.snackbar('Error', 'Please fill all fields correctly.');
-                      }
+                      dataController.insertData(name, selectDate!, present);
+
+                      controller.txtName.clear();
+                      controller.txtDate.clear();
+                      controller.type.value = true;
+                      Get.back();
                     },
-                    child: const Text('Add'),
-                  ),
-                ],
-              );
-            },
+                    child: Text('Add')),
+                TextButton(
+                    onPressed: () {
+                      controller.txtName.clear();
+                      controller.txtDate.clear();
+                      controller.type.value = true;
+                      Get.back();
+                    },
+                    child: Text('Cancle')),
+              ],
+            ),
           );
         },
-        child: const Icon(Icons.add, color: Colors.white, size: 35),
+        child: Icon(Icons.add),
       ),
     );
   }
